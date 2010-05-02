@@ -101,7 +101,6 @@
                         '+' + arr[i].substr(2) + ';' : ';' + arr[i].substr(1));
 
             fn = new Function('i, j, data, fn', 'var out="";' + str + '; return out;');
-console.log(elem, fn.toString());
 
             return type_of.call(elem) === STR ?
                 fn : $.jqotecache[elem.jqote = elem.jqote || n++] = fn;
