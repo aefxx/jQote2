@@ -6,8 +6,8 @@
  * Licensed under the DWTFYWT PUBLIC LICENSE v2
  * Copyright (C) 2004, Sam Hocevar
  *
- * Date: Tue, March 25th, 2010
- * Version: 0.9.0
+ * Date: Sun, May 2nd, 2010
+ * Version: 0.9.1
  */
 (function($) {
 	var ARR = '[object Array]',
@@ -76,7 +76,7 @@
 
             else fn = $.map($(elem), function(e) { return $.jqotec(e, t); });
 
-            for ( var i=0; i < fn.length; i++ )
+            for ( var i=0,l=fn.length; i < l; i++ )
                 for ( var j=0; j < data.length; j++ )
                     dom += fn[i].call(data[j], i, j, data, fn[i]);
 
@@ -94,12 +94,14 @@
                         .split('<'+t).join(t+'>\x1b')
                             .split(t+'>');
 
-            for ( var i=0; i < arr.length; i++ )
-                str += arr[i].charAt(0) != '\x1b' ?
-                    "out+='" + arr[i].replace(/([^\\])(["'])/g, '$1\\$2') + "'" : (arr[i].charAt(1) == '=' ?
+
+            for ( var i=0,l=arr.length; i < l; i++ )
+                str += arr[i][0] !== '\x1b' ?
+                    "out+='" + arr[i].replace(/([^\\])?(["'])/g, '$1\\$2') + "'" : (arr[i][1] === '=' ?
                         '+' + arr[i].substr(2) + ';' : ';' + arr[i].substr(1));
 
             fn = new Function('i, j, data, fn', 'var out="";' + str + '; return out;');
+console.log(elem, fn.toString());
 
             return type_of.call(elem) === STR ?
                 fn : $.jqotecache[elem.jqote = elem.jqote || n++] = fn;
