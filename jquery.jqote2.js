@@ -6,8 +6,8 @@
  * Licensed under the DWTFYWT PUBLIC LICENSE v2
  * Copyright (C) 2004, Sam Hocevar
  *
- * Date: Sun, May 2nd, 2010
- * Version: 0.9.1
+ * Date: Sun, May 5th, 2010
+ * Version: 0.9.2
  */
 (function($) {
 	var ARR = '[object Array]',
@@ -94,10 +94,9 @@
                         .split('<'+t).join(t+'>\x1b')
                             .split(t+'>');
 
-
             for ( var i=0,l=arr.length; i < l; i++ )
-                str += arr[i][0] !== '\x1b' ?
-                    "out+='" + arr[i].replace(/([^\\])?(["'])/g, '$1\\$2') + "'" : (arr[i][1] === '=' ?
+                str += arr[i].charAt(0) !== '\x1b' ?
+                    "out+='" + arr[i].replace(/([^\\])?(["'])/g, '$1\\$2') + "'" : (arr[i].charAt(1) === '=' ?
                         '+' + arr[i].substr(2) + ';' : ';' + arr[i].substr(1));
 
             fn = new Function('i, j, data, fn', 'var out="";' + str + '; return out;');

@@ -122,6 +122,10 @@ ul.nano li {
     background-color: #fff800;
 }
 
+ul.tmpl li {
+    background-color: #00f8ff;
+}
+
 ul input {
     margin: 0 .5em 0 0;
     vertical-align: middle;

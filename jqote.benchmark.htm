@@ -10,6 +10,7 @@
         <script src="external/jquery.flot.min.js" type="text/javascript"></script>
         <script src="external/jquery.mustache.js" type="text/javascript"></script>
         <script src="external/jquery.tempest.js" type="text/javascript"></script>
+        <script src="external/jquery.tmpl.js" type="text/javascript"></script>
         <script src="external/underscore.js" type="text/javascript"></script>
         <script src="external/jquery.srender.js" type="text/javascript"></script>
         <script src="external/jquery.nano.js" type="text/javascript"></script>
@@ -48,6 +49,11 @@
             <li>
                 <p><input type="checkbox" name="contestant" value="nano"/> nano</p>
                 <ul class="progress nano"></ul>
+                <p class="number"></p>
+            </li>
+            <li>
+                <p><input type="checkbox" name="contestant" value="tmpl"/> jQuery templating</p>
+                <ul class="progress tmpl"></ul>
                 <p class="number"></p>
             </li>
             <li>
@@ -152,13 +158,31 @@
                         loop: function() {$.tempest(this.loop, payload.loop);}
                     },
                     nano: {
-                        simple: function() {   $.nano(this.simple, payload.simple);},
+                        simple: function() {$.nano(this.simple, payload.simple);},
                         loop: function() {
                             var nano = {comments: '', header: payload.loop.header};
                             for ( var i=0; i < payload.loop.comments.length; i++ )
                                 nano.comments += $.nano(this.loop.comment, payload.loop.comments[i]);
 
                             $.nano(this.loop.container, nano);
+                        }
+                    },
+                    tmpl: {
+                        simple: function() {
+                            $.templates.simple.call(payload.simple, jQuery, {
+                                data: payload.simple,
+                                index: 0,
+                                dataItem: payload.simple,
+                                options: {}
+                            });
+                        },
+                        loop: function() {
+                            $.templates.loop.call(payload.loop, jQuery, {
+                                data: payload.loop,
+                                index: 0,
+                                dataItem: payload.loop,
+                                options: {}
+                            });
                         }
                     }
                 };
@@ -193,6 +217,9 @@
                     }
                 };
 
+                $.templates.simple = $.tmpl('<div class="test"><h2>This is a test of ${name}</h2><p>The homepage is <a href="${url}">${url}</a>.</p><p>The sources is: ${source}</p></div>');
+                $.templates.loop = $.tmpl('<div class="comments"><h3>${header}</h3><ul>{{each(i,comment) comments}}<li class="comment"><h5>${comment.name}</h5><p>${comment.body}</p></li>{{/each}}</ul></div>');
+
                 var payload = {
                     simple: {
                         name: 'foo',
@@ -217,7 +244,8 @@
                     srender: '#5b4cd8',
                     jqote2: '#70e500',
                     tempest: '#0d3349',
-                    nano: '#fff800'
+                    nano: '#fff800',
+                    tmpl: '#00f8ff'
                 };
 
                 $('input[name=check]').click(function() {
