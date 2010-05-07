@@ -14,6 +14,7 @@
         <script src="external/underscore.js" type="text/javascript"></script>
         <script src="external/jquery.srender.js" type="text/javascript"></script>
         <script src="external/jquery.nano.js" type="text/javascript"></script>
+        <script src="external/ejs_production.js" type="text/javascript"></script>
         <script src="jquery.jqote2.min.js" type="text/javascript"></script>
     </head>
     <body>
@@ -54,6 +55,11 @@
             <li>
                 <p><input type="checkbox" name="contestant" value="tmpl"/> jQuery templating</p>
                 <ul class="progress tmpl"></ul>
+                <p class="number"></p>
+            </li>
+            <li>
+                <p><input type="checkbox" name="contestant" value="ejs"/> embeddedjavascript</p>
+                <ul class="progress ejs"></ul>
                 <p class="number"></p>
             </li>
             <li>
@@ -128,7 +134,7 @@
                 }
 
                 $.plot($('#placeholder'), data, {
-                    xaxis: { ticks: [[1.5, 'Srender'], [3.5, 'mustache.js'], [5.5, 'Underscore'], [7.5, 'jQote2'], [9.5, 'Tempest'], [11.5, 'nano']], autoscaleMargin: .02 },
+                    xaxis: { ticks: [[1.5, 'Srender'], [3.5, 'mustache.js'], [5.5, 'Underscore'], [7.5, 'jQote2'], [9.5, 'Tempest'], [11.5, 'nano'], [13.5, 'jQuery templating'], [15.5, 'embeddedjavascript']], autoscaleMargin: .02 },
                     yaxis: { min: 10, max: 150 },
                     legend: { position: 'ne' },
                     grid: {  backgroundColor: '#ffffff' }
@@ -184,6 +190,10 @@
                                 options: {}
                             });
                         }
+                    },
+                    ejs: {
+                        simple: function() {this.simple.render(payload.simple);},
+                        loop: function() {this.loop.render(payload.loop);}
                     }
                 };
 
@@ -214,6 +224,10 @@
                             comment: '<li class="comment"><h5>{name}</h5><p>{body}</p></li>',
                             container: '<div class="comments"><h3>{header}</h3><ul>{comments}</ul></div>'
                         }
+                    },
+                    ejs: {
+                        simple: new EJS({element: $('#ejs_simple')[0]}),
+                        loop: new EJS({element: $('#ejs_loop')[0]})
                     }
                 };
 
@@ -245,7 +259,8 @@
                     jqote2: '#70e500',
                     tempest: '#0d3349',
                     nano: '#fff800',
-                    tmpl: '#00f8ff'
+                    tmpl: '#00f8ff',
+                    ejs: '#f800ff'
                 };
 
                 $('input[name=check]').click(function() {
@@ -312,5 +327,13 @@
 
     <script type="text/x-jqote-template" id="jqote2_loop">
         <![CDATA[<div class="comments"><h3><%= this.header %></h3><ul><% $.each(this.comments, function(i, comment){ %><li class="comment"><h5><%= comment.name %></h5><p><%= comment.body %></p></li><% }); %></ul></div>]]>
+    </script>
+
+    <script type="text/x-ejs" id="ejs_simple">
+        <div class="test"><h2>This is a test of [%= name %]</h2><p>The homepage is <a href="[%= url %]">[%= url %]</a>.</p><p>The sources is: [%= source %]</p></div>
+    </script>
+
+    <script type="text/x-ejs" id="ejs_loop">
+        <div class="comments"><h3>[%= header %]</h3><ul>[% $.each(comments, function(i, comment){ %]<li class="comment"><h5>[%= comment.name %]</h5><p>[%= comment.body %]</p></li>[% }); %]</ul></div>
     </script>
 </html>

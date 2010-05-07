@@ -126,6 +126,10 @@ ul.tmpl li {
     background-color: #00f8ff;
 }
 
+ul.ejs li {
+    background-color: #f800ff;
+}
+
 ul input {
     margin: 0 .5em 0 0;
     vertical-align: middle;
