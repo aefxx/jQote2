@@ -6,113 +6,182 @@
  * Licensed under the DWTFYWT PUBLIC LICENSE v2
  * Copyright (C) 2004, Sam Hocevar
  *
- * Date: Sun, May 5th, 2010
- * Version: 0.9.2
+ * Date: Sat, Jun 12th, 2010
+ * Version: 0.9.3b
  */
 (function($) {
-	var ARR = '[object Array]',
-		FUNC = '[object Function]',
-		STR = '[object String]';
+    var JQOTE2_UNDEF_TEMPL_ERROR = 'UndefinedTemplateError',
+        JQOTE2_TMPL_COMP_ERROR   = 'TemplateCompilationError',
+        JQOTE2_TMPL_EXEC_ERROR   = 'TemplateExecutionError';
 
-    var n = 0,
-		tag = '%',
-	    type_of = Object.prototype.toString;
+    var ARR  = '[object Array]',
+        OBJ  = '[object Object]',
+        STR  = '[object String]',
+        FUNC = '[object Function]';
+
+    var n = 1, tag = '%',
+        qreg = /^[^<]*(<[\w\W]+>)[^>]*$/,
+        type_of = Object.prototype.toString;
+
+    function raise(error, ext) {
+        throw ($.extend(error, ext), error);
+    }
+
+    function dotted_ns(fn) {
+        var ns = [];
+
+        if ( type_of.call(fn) !== ARR ) return false;
+
+        for ( var i=0,l=fn.length; i < l; i++ )
+            ns[i] = fn[i].id;
+
+        return ns.length ?
+            ns.sort().join('.').replace(/(\b\d+\b)\.(?:\1(\.|$))+/g, '$1$2') : false;
+    }
+
+    function lambda(tmpl, t) {
+        var f, fn = [], t = t || tag,
+            type = type_of.call(tmpl);
+
+        if ( type === FUNC )
+            return tmpl.jqote_id ? [tmpl] : false;
+
+        if ( type !== ARR )
+            return [$.jqotec(tmpl, t)];
+
+        if ( type === ARR )
+            for ( var i=0,l=tmpl.length; i < l; i++ )
+                if ( f = lambda(tmpl[i], t) ) fn.push(f[0]);
+
+        return fn.length ? fn : false;
+    }
 
     $.fn.extend({
-		jqote: function(data, t) {
-			var data = type_of.call(data) === ARR ? data : [data],
-				dom = '';
+        jqote: function(data, t) {
+            var data = type_of.call(data) === ARR ? data : [data],
+                dom = '';
 
-			this.each(function(i) {
-				var f = ( fn = $.jqotecache[this.jqote] ) ? fn : $.jqotec(this, t || tag);
+            this.each(function(i) {
+                var fn = $.jqotec(this, t);
 
-				for ( var j=0; j < data.length; j++ )
-					dom += f.call(data[j], i, j, data, f);
-			});
+                for ( var j=0; j < data.length; j++ )
+                    dom += fn.call(data[j], i, j, data, fn);
+            });
 
-			return dom;
-		},
+            return dom;
+        }
+    });
 
-		jqoteapp: function(elem, data, t) {
-            var dom = $.jqote(elem, data, t);
+    $.each({app: 'append', pre: 'prepend', sub: 'html'}, function(name, method) {
+        $.fn['jqote'+name] = function(elem, data, t) {
+            var ns, regexp, str = $.jqote(elem, data, t)
+                $$ = !qreg.test(str) ?
+                    function(str) {return $(document.createTextNode(str));} : $;
 
-			return this.each(function() {
-				$(this).append(dom);
-			});
-		},
+            if ( !!(ns = dotted_ns(lambda(elem))) )
+                regexp = new RegExp('(^|\\.)'+ns.split('.').join('\\.(.*)?')+'(\\.|$)');
 
-		jqotepre: function(elem, data, t) {
-            var dom = $.jqote(elem, data, t);
+            return this.each(function() {
+                var dom = $$(str);
 
-			return this.each(function() {
-				$(this).prepend(dom);
-			});
-		},
+                $(this)[method](dom);
 
-		jqotesub: function(elem, data, t) {
-            var dom = $.jqote(elem, data, t);
-
-			return this.each(function() {
-				$(this).html(dom);
-			});
-		}
-	});
+                ( dom[0].nodeType === 3 ?
+                    $(this) : dom ).trigger('jqote.'+name, [dom, regexp]);
+            });
+        };
+    });
 
     $.extend({
         jqote: function(elem, data, t) {
-            var dom = '', fn = [], t = t || tag, type = type_of.call(elem),
-                data = type_of.call(data) === ARR ? data : [data];
+            var str = '', t = t || tag,
+                fn = lambda(elem);
 
-            if ( type === FUNC )
-                    fn = [elem];
+            if ( fn === false )
+                raise(new Error('Empty or undefined template passed to $.jqote'), {type: JQOTE2_UNDEF_TEMPL_ERROR});
 
-            else if ( type === ARR )
-                fn = type_of.call(elem[0]) === FUNC ?
-                    elem : $.map(elem, function(e) { return $.jqotec(e, t); });
-
-            else if ( type === STR )
-                fn.push( elem.indexOf('<' + t) < 0 ?
-                    $.jqotec($(elem), t) : $.jqotec(elem, t));
-
-            else fn = $.map($(elem), function(e) { return $.jqotec(e, t); });
+            data = type_of.call(data) !== ARR ?
+                [data] : data;
 
             for ( var i=0,l=fn.length; i < l; i++ )
                 for ( var j=0; j < data.length; j++ )
-                    dom += fn[i].call(data[j], i, j, data, fn[i]);
+                    str += fn[i].call(data[j], i, j, data, fn[i]);
 
-            return dom;
+            return str;
         },
 
-        jqotec: function(elem, t) {
-            var fn, str = '', t = t || tag,
-                type = type_of.call(elem),
-                tmpl = ( type === STR && elem.indexOf('<' + t) >= 0 ) ?
-                            elem : ( elem = ( type === STR  || elem instanceof jQuery ) ?
-                                $(elem)[0] : elem ).innerHTML;
+        jqotec: function(template, t) {
+            var cache, elem, tmpl, t = t || tag,
+                type = type_of.call(template);
 
-            var arr = tmpl.replace(/\s*<!\[CDATA\[\s*|\s*\]\]>\s*|[\r\n\t]/g, '')
-                        .split('<'+t).join(t+'>\x1b')
-                            .split(t+'>');
+            if ( type === STR && qreg.test(template) ) {
+                elem = tmpl = template;
 
-            for ( var i=0,l=arr.length; i < l; i++ )
-                str += arr[i].charAt(0) !== '\x1b' ?
-                    "out+='" + arr[i].replace(/([^\\])?(["'])/g, '$1\\$2') + "'" : (arr[i].charAt(1) === '=' ?
-                        '+' + arr[i].substr(2) + ';' : ';' + arr[i].substr(1));
+                if ( cache = $.jqotecache[template] ) return cache;
+            } else {
+                elem = type === STR || template.nodeType ?
+                    $(template) : template instanceof jQuery ?
+                        template : null;
 
-            fn = new Function('i, j, data, fn', 'var out="";' + str + '; return out;');
+                if ( !elem[0] || !(tmpl = elem[0].innerHTML) )
+                    raise(new Error('Empty or undefined template passed to $.jqotec'), {type: JQOTE2_UNDEF_TEMPL_ERROR});
 
-            return type_of.call(elem) === STR ?
-                fn : $.jqotecache[elem.jqote = elem.jqote || n++] = fn;
+                if ( cache = $.jqotecache[$.data(elem[0], 'jqote_id')] ) return cache;
+            }
+
+            var str = '', index,
+                arr = tmpl.replace(/\s*<!\[CDATA\[\s*|\s*\]\]>\s*|[\r\n\t]/g, '')
+                    .split('<'+t).join(t+'>\x1b')
+                        .split(t+'>');
+
+            for ( var m=0,l=arr.length; m < l; m++ )
+                str += arr[m].charAt(0) !== '\x1b' ?
+                    "out+='" + arr[m].replace(/([^\\])?(["'])/g, '$1\\$2') + "'" : (arr[m].charAt(1) === '=' ?
+                        ';out+=' + arr[m].substr(2) + ';' : ';' + arr[m].substr(1));
+
+            str = 'try{' +
+                ('var out="";'+str+';return out;')
+                    .split("out+='';").join('')
+                        .split('var out="";out+=').join('var out=') +
+                '}catch(e){e.type=JQOTE2_TMPL_EXEC_ERROR;e.template=arguments.callee.toString();throw e;}';
+
+            try {
+                var fn = new Function('i, j, data, fn', str);
+            } catch ( e ) { raise(e, {type: JQOTE2_TMPL_COMP_ERROR}); }
+
+            index = elem instanceof jQuery ?
+                $.data(elem[0], 'jqote_id', n) : elem;
+
+            return $.jqotecache[index] = (fn.jqote_id = n++, fn);
         },
 
         jqotefn: function(elem) {
-            return $.jqotecache[$(elem)[0].jqote] || false;
+            var type = type_of.call(elem),
+                index = type === STR && qreg.test(elem) ?
+                    elem : $.data($(elem)[0], 'jqote_id');
+
+            return $.jqotecache[index] || false;
         },
 
         jqotetag: function(str) {
             tag = str;
         },
 
-        jqotecache: []
+        jqotecache: {}
     });
+
+    $.event.special.jqote = {
+        add: function(obj) {
+            var ns, handler = obj.handler,
+                data = type_of.call(obj.data) !== ARR ? [obj.data] : obj.data;
+
+            if ( !obj.namespace ) obj.namespace = 'app.pre.sub';
+            if ( !data.length || !(ns = dotted_ns(lambda(data))) ) return;
+
+            obj.handler = function(event, dom, regexp) {
+                return !regexp || regexp.test(ns) ?
+                    handler.apply(this, [event, dom]) : null;
+            };
+        }
+    };
 })(jQuery);
