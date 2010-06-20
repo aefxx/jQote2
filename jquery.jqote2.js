@@ -6,8 +6,8 @@
  * Licensed under the DWTFYWT PUBLIC LICENSE v2
  * Copyright (C) 2004, Sam Hocevar
  *
- * Date: Sat, Jun 12th, 2010
- * Version: 0.9.3b
+ * Date: Sat, Jun 20th, 2010
+ * Version: 0.9.4b
  */
 (function($) {
     var JQOTE2_UNDEF_TEMPL_ERROR = 'UndefinedTemplateError',
@@ -173,7 +173,9 @@
     $.event.special.jqote = {
         add: function(obj) {
             var ns, handler = obj.handler,
-                data = type_of.call(obj.data) !== ARR ? [obj.data] : obj.data;
+                data = !obj.data ?
+                    [] : type_of.call(obj.data) !== ARR ?
+                        [obj.data] : obj.data;
 
             if ( !obj.namespace ) obj.namespace = 'app.pre.sub';
             if ( !data.length || !(ns = dotted_ns(lambda(data))) ) return;
