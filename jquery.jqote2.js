@@ -6,8 +6,8 @@
  * Licensed under the DWTFYWT PUBLIC LICENSE v2
  * Copyright (C) 2004, Sam Hocevar
  *
- * Date: Sat, Jun 20th, 2010
- * Version: 0.9.4b
+ * Date: Sat, Jun 22th, 2010
+ * Version: 0.9.5b
  */
 (function($) {
     var JQOTE2_UNDEF_TEMPL_ERROR = 'UndefinedTemplateError',
@@ -143,7 +143,7 @@
                 ('var out="";'+str+';return out;')
                     .split("out+='';").join('')
                         .split('var out="";out+=').join('var out=') +
-                '}catch(e){e.type=JQOTE2_TMPL_EXEC_ERROR;e.template=arguments.callee.toString();throw e;}';
+                '}catch(e){e.type="'+JQOTE2_TMPL_EXEC_ERROR+'";e.args=arguments;e.template=arguments.callee.toString();throw e;}';
 
             try {
                 var fn = new Function('i, j, data, fn', str);
