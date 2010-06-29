@@ -3,19 +3,18 @@
  * Copyright (C) 2010, aefxx
  * http://aefxx.com/
  *
- * Licensed under the DWTFYWT PUBLIC LICENSE v2
- * Copyright (C) 2004, Sam Hocevar
+ * Dual licensed under the WTFPL v2 or MIT (X11) licenses
+ * WTFPL v2 Copyright (C) 2004, Sam Hocevar
  *
- * Date: Sat, Jun 22th, 2010
- * Version: 0.9.5b
+ * Date: Sat, Jun 29th, 2010
+ * Version: 0.9.5
  */
 (function($) {
-    var JQOTE2_UNDEF_TEMPL_ERROR = 'UndefinedTemplateError',
+    var JQOTE2_TMPL_UNDEF_ERROR = 'UndefinedTemplateError',
         JQOTE2_TMPL_COMP_ERROR   = 'TemplateCompilationError',
         JQOTE2_TMPL_EXEC_ERROR   = 'TemplateExecutionError';
 
     var ARR  = '[object Array]',
-        OBJ  = '[object Object]',
         STR  = '[object String]',
         FUNC = '[object Function]';
 
@@ -74,7 +73,7 @@
 
     $.each({app: 'append', pre: 'prepend', sub: 'html'}, function(name, method) {
         $.fn['jqote'+name] = function(elem, data, t) {
-            var ns, regexp, str = $.jqote(elem, data, t)
+            var ns, regexp, str = $.jqote(elem, data, t),
                 $$ = !qreg.test(str) ?
                     function(str) {return $(document.createTextNode(str));} : $;
 
@@ -98,7 +97,7 @@
                 fn = lambda(elem);
 
             if ( fn === false )
-                raise(new Error('Empty or undefined template passed to $.jqote'), {type: JQOTE2_UNDEF_TEMPL_ERROR});
+                raise(new Error('Empty or undefined template passed to $.jqote'), {type: JQOTE2_TMPL_UNDEF_ERROR});
 
             data = type_of.call(data) !== ARR ?
                 [data] : data;
@@ -124,7 +123,7 @@
                         template : null;
 
                 if ( !elem[0] || !(tmpl = elem[0].innerHTML) )
-                    raise(new Error('Empty or undefined template passed to $.jqotec'), {type: JQOTE2_UNDEF_TEMPL_ERROR});
+                    raise(new Error('Empty or undefined template passed to $.jqotec'), {type: JQOTE2_TMPL_UNDEF_ERROR});
 
                 if ( cache = $.jqotecache[$.data(elem[0], 'jqote_id')] ) return cache;
             }
@@ -137,7 +136,7 @@
             for ( var m=0,l=arr.length; m < l; m++ )
                 str += arr[m].charAt(0) !== '\x1b' ?
                     "out+='" + arr[m].replace(/([^\\])?(["'])/g, '$1\\$2') + "'" : (arr[m].charAt(1) === '=' ?
-                        ';out+=' + arr[m].substr(2) + ';' : ';' + arr[m].substr(1));
+                        ';out+=(' + arr[m].substr(2) + ');' : ';' + arr[m].substr(1));
 
             str = 'try{' +
                 ('var out="";'+str+';return out;')
