@@ -130,6 +130,10 @@ ul.ejs li {
     background-color: #f800ff;
 }
 
+ul.pure li {
+    background-color: #ff9900;
+}
+
 ul input {
     margin: 0 .5em 0 0;
     vertical-align: middle;
@@ -139,4 +143,8 @@ ul input {
 #placeholder {
     width: 800px; height: 350px;
     margin: 0 auto;
+}
+
+#pure {
+    display: none;
 }

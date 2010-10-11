@@ -6,13 +6,13 @@
  * Dual licensed under the WTFPL v2 or MIT (X11) licenses
  * WTFPL v2 Copyright (C) 2004, Sam Hocevar
  *
- * Date: Sat, Jun 29th, 2010
- * Version: 0.9.5
+ * Date: Sat, Oct 9th, 2010
+ * Version: 0.9.6
  */
 (function($) {
     var JQOTE2_TMPL_UNDEF_ERROR = 'UndefinedTemplateError',
-        JQOTE2_TMPL_COMP_ERROR   = 'TemplateCompilationError',
-        JQOTE2_TMPL_EXEC_ERROR   = 'TemplateExecutionError';
+        JQOTE2_TMPL_COMP_ERROR  = 'TemplateCompilationError',
+        JQOTE2_TMPL_EXEC_ERROR  = 'TemplateExecutionError';
 
     var ARR  = '[object Array]',
         STR  = '[object String]',
@@ -122,7 +122,7 @@
                     $(template) : template instanceof jQuery ?
                         template : null;
 
-                if ( !elem[0] || !(tmpl = elem[0].innerHTML) )
+                if ( !elem[0] || !(tmpl = elem[0].innerHTML) && !(tmpl = elem.text()) )
                     raise(new Error('Empty or undefined template passed to $.jqotec'), {type: JQOTE2_TMPL_UNDEF_ERROR});
 
                 if ( cache = $.jqotecache[$.data(elem[0], 'jqote_id')] ) return cache;
@@ -135,8 +135,9 @@
 
             for ( var m=0,l=arr.length; m < l; m++ )
                 str += arr[m].charAt(0) !== '\x1b' ?
-                    "out+='" + arr[m].replace(/([^\\])?(["'])/g, '$1\\$2') + "'" : (arr[m].charAt(1) === '=' ?
-                        ';out+=(' + arr[m].substr(2) + ');' : ';' + arr[m].substr(1));
+                    "out+='" + arr[m].replace(/(\\|["'])/g, '\\$1') + "'" : (arr[m].charAt(1) === '=' ?
+                        ';out+=(' + arr[m].substr(2) + ');' : (arr[m].charAt(1) === '!' ?
+                            ';out+=$.jqotenc((' + arr[m].substr(2) + '));' : ';' + arr[m].substr(1)));
 
             str = 'try{' +
                 ('var out="";'+str+';return out;')
@@ -163,7 +164,14 @@
         },
 
         jqotetag: function(str) {
-            tag = str;
+            if ( type_of.call(str) === STR ) tag = str;
+        },
+
+        jqotenc: function(str) {
+            return s.toString()
+                    .replace(/&(?!\w+;)/g, '&#38;')
+                        .split('<').join('&#60;').split('>').join('&#62;')
+                            .split('"').join('&#34;').split("'").join('&#39;');
         },
 
         jqotecache: {}

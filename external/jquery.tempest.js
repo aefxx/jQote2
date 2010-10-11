@@ -1,7 +1,7 @@
 // Tempest jQuery Templating Plugin
 // ================================
 //
-// Copyright (c) 2009 Nick Fitzgerald - http://fitzgeraldnick.com/
+// Copyright (c) 2009, 2010 Nick Fitzgerald - http://fitzgeraldnick.com/
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -68,28 +68,28 @@
         BLOCK_NODES = {
             "for": {
                 expectsEndTag: true,
-                render: function (context) {
+                render: function renderFor(context) {
                     var args = this.args,
                     subNodes = this.subNodes,
+                    subNodesLen = subNodes.length,
                     renderedNodes = [],
-                    i, itemName, arrName, arr, forContext, tmpObj;
+                    i, itemName, arrName, arr, arrLength, forContext, tmpObj;
 
                     if (args.length === 3 && args[1] === "in") {
                         itemName = args[0];
                         arrName = args[2];
-                        arr = getValFromObj(arrName, context);
+                        arr = getContextValue(arrName, context);
+                        arrLength = arr.length;
 
-                        for (i = 0; i < arr.length; i++) {
+                        for (i = 0; i < arrLength; i++) {
                             tmpObj = {};
                             tmpObj[itemName] = arr[i];
                             tmpObj._index = i;
-                            forContext = $.extend(true, {}, context, tmpObj);
+                            forContext = $.extend({}, context, tmpObj);
 
-                            $.each(subNodes, function (j, node) {
-                                renderedNodes.push(
-                                    node.render(forContext)
-                                );
-                            });
+                            for (j = 0; j < subNodesLen; j++) {
+                                renderedNodes.push(subNodes[j].render(forContext));
+                            }
                         }
 
                         return renderedNodes.join("");
@@ -103,12 +103,12 @@
             },
             "if": {
                 expectsEndTag: true,
-                render: function (context) {
+                render: function renderIf(context) {
                     var rendered_nodes = [],
                         subNodes = this.subNodes;
 
                     // Check the truthiness of the argument.
-                    if (!!context[this.args[0]]) {
+                    if (!!getContextValue(this.args[0], context)) {
                         $.each(subNodes, function (i, node) {
                             rendered_nodes.push(node.render(context));
                         });
@@ -133,7 +133,7 @@
                     "" :
                     context[this.name];
                 if (val === "" && this.name.search(/\./) !== -1) {
-                    return getValFromObj(this.name, context);
+                    return getContextValue(this.name, context);
                 }
                 return cleanVal(val);
             }
@@ -146,7 +146,6 @@
             return new TemplateSyntaxError(message);
         }
         this.message = message;
-        return this;
     }
     TemplateSyntaxError.prototype = new SyntaxError();
     TemplateSyntaxError.prototype.name = "TemplateSyntaxError";
@@ -157,13 +156,13 @@
     // so we must accomodate them.
     var split = (function () {
         if ("abc".split(/(b)/).length === 3) {
-            return function (str, delimiter) {
+            return function split(str, delimiter) {
                 return String.prototype
                              .split
                              .call(str, delimiter);
             };
         } else {
-            return function (str, delimiter) {
+            return function split(str, delimiter) {
                 if (Object.prototype
                           .toString
                           .call(delimiter) === "[object RegExp]") {
@@ -229,11 +228,11 @@
         }
     }
 
-    // Traverse a path of an obj from a string representation,
+    // Traverse a path of a context object from a string representation,
     // for example "object.child.attr".
-    function getValFromObj(str, obj) {
+    function getContextValue(str, context) {
         var path = split(str, "."),
-            val = obj[path[0]],
+            val = context[path[0]],
             i;
         for (i = 1; i < path.length; i++) {
             // Return an empty string if the lookup ever hits undefined.
@@ -445,7 +444,7 @@
             }
 
             // Render each node and push it to the lines.
-            $.each(nodes, function (i, node) {
+            $.each(nodes, function accumulateRendered(i, node) {
                 lines.push(node.render(obj));
             });
         });
@@ -508,37 +507,33 @@
     // Extend jQuery("selector").tempest using the existing jQuery.tempest API.
     $.fn.tempest = function() {
         var args = Array.prototype.slice.call(arguments, 0);
-        var f = null;
 
-        if (args.length == 2 &&
-            typeof args[0] == "string" &&
-            typeof args[1] == "object") {
+        if (args.length === 2 &&
+            typeof args[0] === "string" &&
+            typeof args[1] === "object") {
             // Inserts the result of rendering the specified template on the
             // specified data into the set of matched elements.
-            f = function () {
-                $(this).html($.tempest(args[0], args[1]));
-            };
-        } else if (args.length == 3 &&
-                   typeof args[0] == "string" &&
-                   typeof args[1] == "string" &&
-                   typeof args[2] == "object") {
+            return $(this).html($.tempest(args[0], args[1]));
+        } else if (args.length === 3 &&
+                   typeof args[0] === "string" &&
+                   typeof this[args[0]] === "function" &&
+                   typeof args[1] === "string" &&
+                   typeof args[2] === "object") {
             // Calls the appropriate jQuery function, passing it the result of
             // rendering the given template on the data provided.
-            f = function () {
-                $(this)[args[0]]($.tempest(args[1], args[2]));
-            };
+            return $(this)[args[0]]($.tempest(args[1], args[2]));
         } else {
             throw new TypeError([
                 "jQuery(selector).tempest was passed the wrong number or type",
                 "of arguments. Received " + args
             ].join(" "));
         }
-
-        return this.each(f);
     };
 
-    // EXPOSE BLOCK_NODES OBJECT TO ALLOW EXTENSION WITH CUSTOM TAGS
+    // EXPOSE API TO ALLOW EXTENSION WITH CUSTOM TAGS
     $.tempest.tags = BLOCK_NODES;
+    $.tempest.getContextValue = getContextValue;
+    $.tempest.TemplateSyntaxError = TemplateSyntaxError;
 
     // EXPOSE PRIVATE FUNCTIONS FOR TESTING
     if (window.testTempestPrivates === true) {
@@ -553,7 +548,6 @@
         a("isEndTag", isEndTag);
         a("isVarTag", isVarTag);
         a("cleanVal", cleanVal);
-        a("getValFromObj", getValFromObj);
         a("jQueryToString", jQueryToString);
         a("makeObj", makeObj);
         a("storedTemplates", storedTemplates);

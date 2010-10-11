@@ -20,12 +20,12 @@
 
                 test('basic requirements', function() {
                     expect(6);
-                    ok( $.fn.jqote, 'jQqote' );
-                    ok( $.jqote, 'jQqote static' );
-                    ok( $.fn.jqoteapp, 'jQqote append' );
-                    ok( $.fn.jqotepre, 'jQqote prepend' );
-                    ok( $.fn.jqotesub, 'jQqote substitute' );
-                    ok( $.jqotec, 'jQote compile' );
+                    ok( $.fn.jqote, 'jQote2' );
+                    ok( $.jqote, 'jQote2 static' );
+                    ok( $.fn.jqoteapp, 'jQote2 append' );
+                    ok( $.fn.jqotepre, 'jQote2 prepend' );
+                    ok( $.fn.jqotesub, 'jQote2 substitute' );
+                    ok( $.jqotec, 'jQote2 compile' );
                 });
 
                 module('Shorthand tag');
@@ -55,8 +55,6 @@
                     equal($('#stdb3').jqote([{x: 3}]), 'IEEE 754');
                     equal($('#stdb4').jqote([{x: 3}]), 'GNU is Not Unix');
                 });
-
-                
             });
         </script>
         <script id="sb1" type="text/x-jqote-template">
@@ -81,9 +79,9 @@
         </script>
         <script id="sa2" type="text/x-jqote-template">
             <![CDATA[
-                <%= ( ( this.n == 0 ) ?
-                        0 : ( this.n == 1 || this.n == 2 ) ?
-                            1 : parseInt($.jqote(fn, {n: this.n-1})) + parseInt($.jqote(fn, {n: this.n-2})) )
+                <%= ( ( this.n === 0 ) ?
+                        0 : ( this.n === 1 || this.n === 2 ) ?
+                            1 : parseInt($.jqote(fn, {n: this.n-1}), 10) + parseInt($.jqote(fn, {n: this.n-2}), 10) )
                 %>
             ]]>
         </script>
