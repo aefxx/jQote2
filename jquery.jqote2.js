@@ -6,8 +6,8 @@
  * Dual licensed under the WTFPL v2 or MIT (X11) licenses
  * WTFPL v2 Copyright (C) 2004, Sam Hocevar
  *
- * Date: Sat, Oct 9th, 2010
- * Version: 0.9.6
+ * Date: Thu, Oct 21st, 2010
+ * Version: 0.9.7
  */
 (function($) {
     var JQOTE2_TMPL_UNDEF_ERROR = 'UndefinedTemplateError',
@@ -32,7 +32,7 @@
         if ( type_of.call(fn) !== ARR ) return false;
 
         for ( var i=0,l=fn.length; i < l; i++ )
-            ns[i] = fn[i].id;
+            ns[i] = fn[i].jqote_id;
 
         return ns.length ?
             ns.sort().join('.').replace(/(\b\d+\b)\.(?:\1(\.|$))+/g, '$1$2') : false;
