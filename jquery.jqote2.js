@@ -168,7 +168,7 @@
         },
 
         jqotenc: function(str) {
-            return s.toString()
+            return str.toString()
                     .replace(/&(?!\w+;)/g, '&#38;')
                         .split('<').join('&#60;').split('>').join('&#62;')
                             .split('"').join('&#34;').split("'").join('&#39;');
