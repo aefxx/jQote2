@@ -6,8 +6,8 @@
  * Dual licensed under the WTFPL v2 or MIT (X11) licenses
  * WTFPL v2 Copyright (C) 2004, Sam Hocevar
  *
- * Date: Thu, Oct 21st, 2010
- * Version: 0.9.7
+ * Date: Fri, May 4th, 2012
+ * Version: 0.9.8
  */
 (function($) {
     var JQOTE2_TMPL_UNDEF_ERROR = 'UndefinedTemplateError',
