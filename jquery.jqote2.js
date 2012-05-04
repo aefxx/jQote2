@@ -94,7 +94,7 @@
     $.extend({
         jqote: function(elem, data, t) {
             var str = '', t = t || tag,
-                fn = lambda(elem);
+                fn = lambda(elem, t);
 
             if ( fn === false )
                 raise(new Error('Empty or undefined template passed to $.jqote'), {type: JQOTE2_TMPL_UNDEF_ERROR});
